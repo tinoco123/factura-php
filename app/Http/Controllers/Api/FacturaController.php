@@ -55,7 +55,7 @@ class FacturaController extends Controller
     public function generateFacturaPdf(int $id)
     {
         try {
-            $factura = Factura::with(["emisor", "receptor", "pago", "conceptos"])->findOrFail($id);
+            $factura = Factura::with(["emisor:id,nombre_empresa,rfc", "receptor:id,nombre_empresa,rfc", "pago:id,monto,created_at", "conceptos:id,factura_id,nombre_producto,cantidad,precio_unitario,tipo"])->findOrFail($id);
 
             $pdf = new Fpdf();
             $pdf->AddPage();
@@ -92,7 +92,7 @@ class FacturaController extends Controller
         } catch(ModelNotFoundException $exception){
             return response()->json(["error" => "La factura no fue encontrada"], 404);
         } catch(Exception $exception){
-            return response()->json(["error" => "Error desconocido"], 500);
+            return response()->json(["error" => $exception->getMessage()], 500);
         }
 
     }
