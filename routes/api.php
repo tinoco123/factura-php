@@ -9,4 +9,5 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::get('/facturas', [FacturaController::class, "index"]);
+Route::get('/facturas/excel', [FacturaController::class, "generateFacturaExcel"]);
 Route::get('/facturas/pdf/{id}', [FacturaController::class, "generateFacturaPdf"]);

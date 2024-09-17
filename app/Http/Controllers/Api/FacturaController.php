@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Api;
 
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use App\Http\Controllers\Controller;
+use App\Exports\FacturaExport;
 use Illuminate\Http\Request;
 use App\Models\Factura;
+use Illuminate\Support\Facades\Validator;
 use Codedge\Fpdf\Fpdf\Fpdf;
+use Maatwebsite\Excel\Facades\Excel;
 use Exception;
 
 class FacturaController extends Controller
@@ -85,7 +88,6 @@ class FacturaController extends Controller
             $pdf->Cell(0, 10, "COMENTARIOS:", 1, 1, "C");
             $pdf->MultiCell(0, 30, $factura->comentario, 1,);
             
-            
             $pdfBuffer = $pdf->Output("S");
 
             return response($pdfBuffer)->header("Content-Type","application/pdf")->header("Content-Disposition","inline; filename='factura.pdf'");
@@ -95,5 +97,30 @@ class FacturaController extends Controller
             return response()->json(["error" => $exception->getMessage()], 500);
         }
 
+    }
+
+
+    public function generateFacturaExcel(Request $request){    
+        $validator = Validator::make($request->all(), [
+            'fecha_inicio' => 'nullable|date',
+            'fecha_fin' => 'nullable|date|after_or_equal:fecha_inicio',
+        ]);
+ 
+        if ($validator->fails()) {
+            return response()->json(['errors'=> $validator->errors()], 400);
+        }
+        
+        
+        $validated = $validator->validated();
+        $fecha_inicio = null;
+        $fecha_fin = null;
+        if (array_key_exists("fecha_inicio", $validated)) {
+            $fecha_inicio = $validated["fecha_inicio"];
+        }
+        if (array_key_exists("fecha_fin", $validated)) {
+            $fecha_fin = $validated["fecha_fin"];
+        }
+
+        return Excel::download(new FacturaExport($fecha_inicio, $fecha_fin), "Facturas.xlsx");
     }
 }
